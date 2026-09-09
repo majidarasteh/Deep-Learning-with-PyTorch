@@ -98,40 +98,60 @@ The model then subtracts this backcast from the original input:
 Residual = Input - Backcast
 ```
 
-The next block receives this residual.
+The next block receives this residual. This is one of the most important concepts in N-BEATS.
 
-Therefore:
+## 3.1. N-BEATS Architecture
+
+A simplified N-BEATS architecture looks like this:
 
 ```text
-Input
-  │
-  ▼
-Block 1
-  │
-  ├── Backcast
-  │
-  └── Forecast ──┐
-                 │
-Residual         │
-  ▲              │
-  │              │
-Input - Backcast │
-  │              │
-  ▼              │
-Block 2          │
-  │              │
-  ├── Backcast   │
-  │              │
-  └── Forecast ──┤
+                    Input Window
+                   (60 observations)
+                          │
+                          ▼
+                 ┌─────────────────┐
+                 │    Block 1      │
+                 │                 │
+                 │ Fully Connected │
+                 │      Layers     │
+                 └────────┬────────┘
+                          │
+                 ┌────────┴────────┐
+                 ▼                 ▼
+              Backcast          Forecast
+                 │                 │
+                 │                 │
+                 ▼                 ▼
+             Residual          Forecast Sum
                  │
                  ▼
-             Sum Forecasts
+                 ┌─────────────────┐
+                 │    Block 2      │
+                 │                 │
+                 │ Fully Connected │
+                 │      Layers     │
+                 └────────┬────────┘
+                          │
+                    ┌─────┴─────┐
+                    ▼           ▼
+                 Backcast    Forecast
+                    │           │
+                    ▼           │
+                Residual         │
+                    │            │
+                    ▼            │
+                 Block 3         │
+                    │            │
+                   ...           │
+                    │            │
+                    └────────────┘
+                          │
+                          ▼
+                  Final Forecast
 ```
 
-This is one of the most important concepts in N-BEATS.
 
-
-# 4. Backcast and Forecast
+## 3.2. Backcast and Forecast
 
 Each N-BEATS block produces two outputs.
 
@@ -181,7 +201,7 @@ Block Input
 ```
 
 
-# 5. Residual Learning
+## 3.3. Residual Learning
 
 Suppose our input is:
 
@@ -237,58 +257,7 @@ Forecast =
 This is called **doubly residual stacking**.
 
 
-# 6. N-BEATS Architecture
-
-A simplified N-BEATS architecture looks like this:
-
-```text
-                    Input Window
-                   (60 observations)
-                          │
-                          ▼
-                 ┌─────────────────┐
-                 │    Block 1      │
-                 │                 │
-                 │ Fully Connected │
-                 │      Layers     │
-                 └────────┬────────┘
-                          │
-                 ┌────────┴────────┐
-                 ▼                 ▼
-              Backcast          Forecast
-                 │                 │
-                 │                 │
-                 ▼                 ▼
-             Residual          Forecast Sum
-                 │
-                 ▼
-                 ┌─────────────────┐
-                 │    Block 2      │
-                 │                 │
-                 │ Fully Connected │
-                 │      Layers     │
-                 └────────┬────────┘
-                          │
-                    ┌─────┴─────┐
-                    ▼           ▼
-                 Backcast    Forecast
-                    │           │
-                    ▼           │
-                Residual         │
-                    │            │
-                    ▼            │
-                 Block 3         │
-                    │            │
-                   ...           │
-                    │            │
-                    └────────────┘
-                          │
-                          ▼
-                  Final Forecast
-```
-
-
-# 7. N-BEATS Blocks
+## 3.4. N-BEATS Blocks
 
 An N-BEATS model consists of multiple **blocks**.
 
@@ -330,7 +299,7 @@ The important point is that the block doesn't directly predict the future from t
 Instead, it generates **theta parameters**, which are then transformed into backcast and forecast representations.
 
 
-# 8. Basis Expansion
+## 3.5 Basis Expansion
 
 This is another important concept in N-BEATS.
 
@@ -373,7 +342,7 @@ where:
 This allows N-BEATS to learn different patterns in the time series.
 
 
-# 9. Preparing the Time Series
+# 4. Preparing the Time Series
 
 We will use the same sliding-window idea used for our previous models.
 
@@ -403,7 +372,7 @@ So the model learns:
 60 past values → 7 future values
 ```
 
-# 10. Creating Sliding Windows
+## 4.1. Creating Sliding Windows
 
 Our existing `create_sliding_windows()` function can still be used.
 
@@ -443,7 +412,7 @@ y_train
 ```
 
 
-# 11. Input Shape for N-BEATS
+## 4.2. Input Shape for N-BEATS
 
 For an N-BEATS model, the input is normally represented as:
 
@@ -487,7 +456,7 @@ The reason is that N-BEATS uses fully connected layers rather than recurrent lay
 
 > **So, for our N-BEATS model, the data shape remains unchanged, just like the FFNN model.**
 
-# 13. PyTorch Dataset and DataLoader
+## 4.3. PyTorch Dataset and DataLoader
 
 We then convert the NumPy arrays to PyTorch tensors:
 
@@ -518,7 +487,7 @@ train_loader, test_loader = create_data_loaders(
 )
 ```
 
-# 12. Implementing an N-BEATS Block
+## 4.4. Implementing an N-BEATS Block
 
 Now we can implement an N-BEATS block.
 
@@ -599,7 +568,7 @@ class NBeatsBlock(nn.Module):
 This is a simplified **generic N-BEATS block**.
 
 
-# 13. Understanding the Block
+## 4.5. Understanding the Block
 
 The first layer receives:
 
@@ -642,7 +611,7 @@ theta
 ```
 
 
-# 13. Creating the Complete N-BEATS Model
+## 4.6. Creating the Complete N-BEATS Model
 
 Now we can stack multiple blocks.
 
@@ -692,7 +661,7 @@ class NBeats(nn.Module):
 ```
 
 
-# 14. Understanding the Forward Pass
+## 4.7. Understanding the Forward Pass
 
 Suppose we have:
 
@@ -753,7 +722,7 @@ $$
 $$
 
 
-# 15. Why Use Multiple Blocks?
+## 4.8. Why Use Multiple Blocks?
 
 Each block can learn different aspects of the time series.
 
@@ -782,7 +751,7 @@ The later blocks focus on information that earlier blocks have not already expla
 This is similar to residual learning in other deep learning architectures.
 
 
-# 16. Creating the Model
+# 5. Creating the Model
 
 For our example:
 
@@ -809,7 +778,7 @@ We can inspect it:
 print(model)
 ```
 
-# 17. Loss Function
+## 5.1. Loss Function
 
 As in our **FFNN, RNN, LSTM, and GRU** models, we use **Mean Absolute Error (MAE)**.
 
@@ -839,7 +808,7 @@ The absolute error is:
 
 The loss function calculates the average of these absolute errors over the batch.
 
-# 18. Optimizer
+## 5.2. Optimizer
 
 We use the Adam optimizer:
 
@@ -864,7 +833,7 @@ The learning rate is:
 0.0001
 ```
 
-# 19. Training the Model
+## 5.3. Training the Model
 
 Because we already created a general `train_model()` function, we do not need to write another training loop specifically for `model_N_BEATS`.
 
@@ -886,7 +855,7 @@ For time-series regression, the important metrics are the **loss values and fore
 Therefore, although our general training function may retain the accuracy variables for consistency with previous tutorials, they are not meaningful for Bitcoin price regression.
 
 
-# 20. Visualizing the Loss
+## 5.4. Visualizing the Loss
 
 Plot Training and Test Loss
 
@@ -904,7 +873,7 @@ plot_train_test_loss(
 The loss curve shows how the training and test MAE change during the 100 epochs.
 
 
-# 21. Making Predictions
+## 5.5 Making Predictions
 
 Predicting the Next Bitcoin Price
 
@@ -932,7 +901,7 @@ The function takes the most recent:
 60 Close prices
 ```
 
-# 22. N-BEATS vs LSTM
+# 6. N-BEATS vs LSTM
 
 It is useful to understand the difference between the two models.
 
@@ -947,16 +916,4 @@ It is useful to understand the difference between the two models.
 | Basis expansion        | No                          | Yes               |
 | Main input shape       | `(batch, window, features)` | `(batch, window)` |
 
-For our univariate example:
 
-### LSTM
-
-```text
-(batch_size, 60, 1)
-```
-
-### N-BEATS
-
-```text
-(batch_size, 60)
-```
