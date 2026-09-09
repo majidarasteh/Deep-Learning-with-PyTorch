@@ -329,9 +329,7 @@ Basis Expansion
 
 Mathematically, the forecast can be represented as:
 
-$$
-\hat{y} = \theta B
-$$
+$\hat{y} = \theta B $
 
 where:
 
@@ -712,14 +710,12 @@ Block 4
 
 The final prediction is:
 
-$$
-\hat{y}
-=
+$\hat{y}=
 \hat{y}_1+
 \hat{y}_2+
 \hat{y}_3+
 \hat{y}_4
-$$
+$
 
 
 ## 4.8. Why Use Multiple Blocks?
